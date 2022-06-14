@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>TheMusic_bot &#8212; документация Music Bot 1.0.3</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/translations.js"></script>
+    
+    <link rel="index" title="Алфавитный указатель" href="genindex.html" />
+    <link rel="search" title="Поиск" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Навигация</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Алфавитный указатель"
+             accesskey="I">указатель</a></li>
+        <li class="nav-item nav-item-0"><a href="#">документация Music Bot 1.0.3</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TheMusic_bot</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="themusic-bot">
+<h1>TheMusic_bot<a class="headerlink" href="#themusic-bot" title="Ссылка на этот заголовок">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Ссылка на этот заголовок">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Алфавитный указатель</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Поиск</span></a></p></li>
+</ul>
+</section>
+<section id="id1">
+<h1>Библиотеки:<a class="headerlink" href="#id1" title="Ссылка на этот заголовок">¶</a></h1>
+<p>○ pyTelegramBotApi
+○ Yandex_Music_Api
+○ OS</p>
+</section>
+<section id="id2">
+<h1>Основные функции бота:<a class="headerlink" href="#id2" title="Ссылка на этот заголовок">¶</a></h1>
+<ul class="simple">
+<li><p>Взаимодействие с API Яндекс.Музыки</p></li>
+<li><p>Inline клавиатура</p></li>
+<li><p>Поиск композиции по названию</p></li>
+<li><p>Поиск альбомов по заданной композиции</p></li>
+<li><p>Получение чарта Яндекс.Музыки</p></li>
+<li><p>Получение песен из чарта Яндекс.Музыки</p></li>
+</ul>
+</section>
+<section id="yandex-music-api">
+<h1>Реализация через Yandex_Music_Api:<a class="headerlink" href="#yandex-music-api" title="Ссылка на этот заголовок">¶</a></h1>
+</section>
+<section id="id3">
+<h1>1. Инициализация токенов, создание клиента, создание БД:<a class="headerlink" href="#id3" title="Ссылка на этот заголовок">¶</a></h1>
+<p>client = Client(«Токен из яндекс.музыки»).init()
+bot = telebot.TeleBot(„Токен телеграма“)
+SRC = „covers/“
+client.init()
+type_to_name = {</p>
+<blockquote>
+<div><p>„track“: „трек“,
+„artist“: „исполнитель“,
+„album“: „альбом“,
+„playlist“: „плейлист“,
+„video“: „видео“,
+„user“: „пользователь“,
+„podcast“: „подкаст“,
+„podcast_episode“: „эпизод подкаста“,</p>
+</div></blockquote>
+<p>}</p>
+</section>
+<section id="id4">
+<h1>2. Создание клавиатур:<a class="headerlink" href="#id4" title="Ссылка на этот заголовок">¶</a></h1>
+<p>keyboardstart = telebot.types.ReplyKeyboardMarkup(True, True)
+keyboardstart.row(„Поиск музыки“, „Чарт“, „Помощь“)
+keyboardchart = telebot.types.ReplyKeyboardMarkup(True, True)
+keyboardchart.row(„Выбрать и воспроизвести“)
+keyboardalbum = telebot.types.ReplyKeyboardMarkup(True, True)
+keyboardchart.row(„Найти весь альбом“, „Назад“)
+keyboardtex = telebot.types.ReplyKeyboardMarkup(True, True)
+keyboardtex.row(„Назад“)</p>
+</section>
+<section id="start">
+<h1>3. Хендлер команды /start:<a class="headerlink" href="#start" title="Ссылка на этот заголовок">¶</a></h1>
+<p>&#64;bot.message_handler(commands=[„start“])
+def start_message(message):</p>
+<blockquote>
+<div><p>bot.send_message(message.chat.id, „Это бот для поиска аудио, клипов и т.д.“, reply_markup=keyboardstart)</p>
+</div></blockquote>
+</section>
+<section id="id5">
+<h1>4. Хендлер текста, получаемого в сообщении от пользователей:<a class="headerlink" href="#id5" title="Ссылка на этот заголовок">¶</a></h1>
+<p>&#64;bot.message_handler(content_types=[„text“])
+def send_message(message):</p>
+<blockquote>
+<div><dl>
+<dt>if message.text == „Помощь“:</dt><dd><p>bot.send_message(message.chat.id, „Связаться с админом - <a class="reference external" href="https://t.me/noofme">https://t.me/noofme</a>“, reply_markup=keyboardstart)</p>
+</dd>
+<dt>if message.text == „Текст песни“:</dt><dd><p>bot.send_message(message.chat.id, „Раздел в разработке“, reply_markup=keyboardstart)</p>
+</dd>
+<dt>if message.text == „Поиск музыки“:</dt><dd><p>bot.send_message(message.chat.id, „Введите название песни, которую вы хотите найти:“)
+bot.register_next_step_handler(message, send_search_request_and_print_result)</p>
+</dd>
+<dt>if message.text == „Чарт“:</dt><dd><p>CHART_ID = „world“
+TOKEN = os.environ.get(„AQAAAAAc65qhAAG8XjyfoAhskUCSi6PAgpWv-2I“)</p>
+<p>client = Client(TOKEN).init()
+chart = client.chart(CHART_ID).chart</p>
+<p>text = [f“🏆 {chart.title}“, chart.description, „“, „Треки:“]
+f = 0
+for track_short in chart.tracks:</p>
+<blockquote>
+<div><p>track, chart = track_short.track, track_short.chart
+artists = „“
+if track.artists:</p>
+<blockquote>
+<div><p>artists = „ - „ + „, „.join(artist.name for artist in track.artists)</p>
+</div></blockquote>
+<p>filename = f
+if os.path.exists(f»{filename}.mp3»):</p>
+<blockquote>
+<div><p>pass</p>
+</div></blockquote>
+<p>#audio = open(f’C:/Users/Paul/PycharmProjects/resposbot/{filename}.mp3“, „rb“)
+#bot.send_audio(message.chat.id, audio)
+#audio.close()
+track_text = f“{track.title}{artists}“
+#bot.send_message(message.chat.id, client.tracks_download_info(track_id=track.id, get_direct_links=True))
+if chart.progress == „down“:</p>
+<blockquote>
+<div><p>track_text = „🔻 „ + track_text</p>
+</div></blockquote>
+<dl class="simple">
+<dt>elif chart.progress == „up“:</dt><dd><p>track_text = „🔺 „ + track_text</p>
+</dd>
+<dt>elif chart.progress == „new“:</dt><dd><p>track_text = „🆕 „ + track_text</p>
+</dd>
+<dt>elif chart.position == 1:</dt><dd><p>track_text = „👑 „ + track_text</p>
+</dd>
+</dl>
+<p>track_text = f“{chart.position} {track_text}“
+text.append(track_text)
+f+=1</p>
+</div></blockquote>
+<p>bot.send_message(message.chat.id, f“n“.join(text), reply_markup=keyboardchart)</p>
+</dd>
+<dt>if message.text == „Найти весь альбом“:</dt><dd><p>bot.send_message(message.chat.id, „Введите номер трека, к которому вы хотите найти альбом:“)
+bot.register_next_step_handler(message, find_album_by_id)</p>
+</dd>
+<dt>if message.text == „Назад“:</dt><dd><p>bot.send_message(message.chat.id, „Вы в главном меню:“, reply_markup=keyboardstart)</p>
+</dd>
+<dt>if message.text == „Выбрать и воспроизвести“:</dt><dd><p>bot.send_message(message.chat.id, „Введите номер трека:“,reply_markup=keyboardalbum)
+bot.register_next_step_handler(message, senda)</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl>
+<dt>def find_album_by_id(message):</dt><dd><dl>
+<dt>try:</dt><dd><p>num = int(message.text)
+CHART_ID = „world“
+TOKEN = os.environ.get(„AQAAAAAc65qhAAG8XjyfoAhskUCSi6PAgpWv-2I“)
+client = Client(TOKEN).init()
+chart = client.chart(CHART_ID).chart
+for track_short in chart.tracks:</p>
+<blockquote>
+<div><p>track, chart = track_short.track, track_short.chart
+if chart.position != num:</p>
+<blockquote>
+<div><p>chart.position += 1</p>
+</div></blockquote>
+<dl>
+<dt>else:</dt><dd><p>ALBUM_ID = track.albums[0].id</p>
+<p>album = client.albums_with_tracks(ALBUM_ID)
+tracks = []
+for i, volume in enumerate(album.volumes):</p>
+<blockquote>
+<div><dl class="simple">
+<dt>if len(album.volumes) &gt; 1:</dt><dd><p>tracks.append(f“💿 Диск {i + 1}“)</p>
+</dd>
+</dl>
+<p>tracks += volume</p>
+</div></blockquote>
+<p>text = „АЛЬБОМnn“
+text += f“{album.title}n“
+text += f»Исполнитель: {“, „.join([artist.name for artist in album.artists])}n»
+text += f“{album.year} · {album.genre}n“</p>
+<p>cover = album.cover_uri
+if cover:</p>
+<blockquote>
+<div><p>text += f’Обложка: {cover.replace(«%%», «400x400»)}nn“</p>
+</div></blockquote>
+<p>text += „Список треков:“</p>
+<p>bot.send_message(message.chat.id, text)</p>
+<dl>
+<dt>for track in tracks:</dt><dd><dl>
+<dt>if isinstance(track, str):</dt><dd><p>bot.send_message(message.chat.id, track)</p>
+</dd>
+<dt>else:</dt><dd><p>artists = „“
+if track.artists:</p>
+<blockquote>
+<div><p>artists = „ - „ + „, „.join(artist.name for artist in track.artists)</p>
+</div></blockquote>
+<p>bot.send_message(message.chat.id, track.title + artists)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</dd>
+<dt>except:</dt><dd><p>bot.send_message(message.chat.id, „Ошибка запроса, попробуйте снова.“)</p>
+</dd>
+</dl>
+</dd>
+<dt>def send_search_request_and_print_result(message):</dt><dd><p>query = message.text
+search_result = client.search(query)</p>
+<p>text = [f’Результаты по запросу «{query}»:“, „“]
+best_result_text = „“
+try:</p>
+<blockquote>
+<div><p>search_result.best.result.download(filename=f“{search_result.best.result.title}.mp3“, bitrate_in_kbps=192)</p>
+</div></blockquote>
+<dl>
+<dt>except AttributeError:</dt><dd><p>bot.send_message(message.chat.id, „По вашему запросу ничего не найдено. Уточните запрос.“)</p>
+</dd>
+<dt>if search_result.best:</dt><dd><p><a href="#id6"><span class="problematic" id="id7">type_</span></a> = search_result.best.type
+best = search_result.best.result</p>
+<p>text.append(f“❗️Лучший результат: {type_to_name.get(<a href="#id8"><span class="problematic" id="id9">type_</span></a>)}“)</p>
+<p>if <a href="#id10"><span class="problematic" id="id11">type_</span></a> in [„track“, „podcast_episode“]:</p>
+<blockquote>
+<div><p>artists = „“
+if best.artists:</p>
+<blockquote>
+<div><p>artists = „ - „ + „, „.join(artist.name for artist in best.artists)</p>
+</div></blockquote>
+<p>best_result_text = best.title + artists</p>
+</div></blockquote>
+<dl class="simple">
+<dt>elif <a href="#id12"><span class="problematic" id="id13">type_</span></a> == „artist“:</dt><dd><p>best_result_text = best.name</p>
+</dd>
+<dt>elif <a href="#id14"><span class="problematic" id="id15">type_</span></a> in [„album“, „podcast“]:</dt><dd><p>best_result_text = best.title</p>
+</dd>
+<dt>elif <a href="#id16"><span class="problematic" id="id17">type_</span></a> == „playlist“:</dt><dd><p>best_result_text = best.title</p>
+</dd>
+<dt>elif <a href="#id18"><span class="problematic" id="id19">type_</span></a> == „video“:</dt><dd><p>best_result_text = f“{best.title} {best.text}“</p>
+</dd>
+</dl>
+<p>text.append(f’Содержимое лучшего результата: {best_result_text}n“)</p>
+</dd>
+<dt>if search_result.artists:</dt><dd><p>text.append(f’Исполнителей: {search_result.artists.total}“)</p>
+</dd>
+<dt>if search_result.albums:</dt><dd><p>text.append(f’Альбомов: {search_result.albums.total}“)</p>
+</dd>
+<dt>if search_result.tracks:</dt><dd><p>text.append(f’Треков: {search_result.tracks.total}“)</p>
+</dd>
+<dt>if search_result.playlists:</dt><dd><p>text.append(f’Плейлистов: {search_result.playlists.total}“)</p>
+</dd>
+<dt>if search_result.videos:</dt><dd><p>text.append(f’Видео: {search_result.videos.total}“)</p>
+</dd>
+<dt>try:</dt><dd><p>img = search_result.best.result.downloadCover(filename=“cover.png“)
+cover = open(„cover.png“, „rb“)
+bot.send_photo(message.chat.id, cover)
+text.append(„“)
+bot.send_message(message.chat.id, „n“.join(text))
+audio = open(f“{search_result.best.result.title}.mp3“, „rb“)
+bot.send_audio(message.chat.id, audio, title=search_result.best.result.title, reply_markup=keyboardstart)
+audio.close()</p>
+</dd>
+<dt>except AttributeError:</dt><dd><p>bot.send_message(message.chat.id, „По вашему запросу ничего не найдено. Уточните запрос.“)</p>
+</dd>
+<dt>#except:</dt><dd><p>#bot.send_message(message.chat.id, „Ошибка, введите другой запрос“, reply_markup=keyboardstart)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="#">Оглавление</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">TheMusic_bot</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+<li><a class="reference internal" href="#id1">Библиотеки:</a></li>
+<li><a class="reference internal" href="#id2">Основные функции бота:</a></li>
+<li><a class="reference internal" href="#yandex-music-api">Реализация через Yandex_Music_Api:</a></li>
+<li><a class="reference internal" href="#id3">1. Инициализация токенов, создание клиента, создание БД:</a></li>
+<li><a class="reference internal" href="#id4">2. Создание клавиатур:</a></li>
+<li><a class="reference internal" href="#start">3. Хендлер команды /start:</a></li>
+<li><a class="reference internal" href="#id5">4. Хендлер текста, получаемого в сообщении от пользователей:</a></li>
+</ul>
+
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>Эта страница</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Исходный текст</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Быстрый поиск</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Искать" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Навигация</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="Алфавитный указатель"
+             >указатель</a></li>
+        <li class="nav-item nav-item-0"><a href="#">документация Music Bot 1.0.3</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">TheMusic_bot</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Pavel Borisov.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+    </div>
+  </body>
+</html>
